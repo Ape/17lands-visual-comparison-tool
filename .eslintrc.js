@@ -15,6 +15,7 @@ module.exports = {
     jest: true,
   },
   rules: {
+    camelcase: 0,
     indent: 0,
     'no-debugger': 0,
     'no-alert': 0,

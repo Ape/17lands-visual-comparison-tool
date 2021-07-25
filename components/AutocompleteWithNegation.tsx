@@ -5,11 +5,13 @@ import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import Zoom from '@material-ui/core/Zoom';
 
-interface AutocompleteOption {
+export interface AutocompleteOption {
   category: string;
   label: string;
   value: string;
   exclude: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
 }
 
 interface AutocompleteWithNegationProps {
@@ -18,6 +20,7 @@ interface AutocompleteWithNegationProps {
   setSelectedOptionsLocally: Dispatch<SetStateAction<AutocompleteOption[]>>;
   setSelectedOptionsRemotely: (newSelectedOptions: AutocompleteOption[]) => void;
   label: string;
+  placeholder: string;
 }
 
 const AutocompleteWithNegation: React.FC<AutocompleteWithNegationProps> = ({
@@ -26,6 +29,7 @@ const AutocompleteWithNegation: React.FC<AutocompleteWithNegationProps> = ({
   setSelectedOptionsLocally,
   setSelectedOptionsRemotely,
   label,
+  placeholder,
 }) => (
   <Autocomplete
     multiple
@@ -35,7 +39,7 @@ const AutocompleteWithNegation: React.FC<AutocompleteWithNegationProps> = ({
     groupBy={(option) => option.category}
     getOptionLabel={(option) => option.label}
     getOptionSelected={(option, value) => option.value === value.value}
-    renderInput={(params) => <TextField {...params} label={label} variant="outlined" />}
+    renderInput={(params) => <TextField autoFocus {...params} label={label} variant="outlined" placeholder={placeholder} />}
     onChange={(e, newSelectedOptions: AutocompleteOption[]) => {
       setSelectedOptionsLocally(newSelectedOptions);
       setSelectedOptionsRemotely(newSelectedOptions);

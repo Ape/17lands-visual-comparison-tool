@@ -42,11 +42,11 @@ const MtgCbWebApp = ({ Component, pageProps }: AppProps): JSX.Element => {
           <ThemeProvider theme={darkTheme}>
             <CssBaseline />
             <GlobalStyle />
-            <ReduxProvider store={store}>
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
-            </ReduxProvider>
+            {/* <ReduxProvider store={store}> */}
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+            {/* </ReduxProvider> */}
           </ThemeProvider>
         </StylesProvider>
       </SnackbarProvider>
