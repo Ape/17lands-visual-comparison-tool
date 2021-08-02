@@ -8,7 +8,7 @@ import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography';
 import AutocompleteWithNegation, { AutocompleteOption } from '../components/AutocompleteWithNegation';
 import CardBox from '../features/comparison/CardBox';
-import cards, { Card } from '../features/comparison/data/afrCards';
+import cards, { Card, cardDataDates } from '../features/comparison/data/afrCards';
 // import getCardData from '../network/features/comparison/getCardData';
 
 const HomePage: React.FC = () => {
@@ -67,7 +67,7 @@ const HomePage: React.FC = () => {
         17 Lands Visual Comparison
       </Typography>
       <Typography variant="subtitle1" align="center" color="textSecondary">
-        <em>Because reading tables during a draft is too hard!</em>
+        <em>Data last updated: {cardDataDates.endDate}</em>
       </Typography>
       <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
         <Grid item xs={8} md={6}>
