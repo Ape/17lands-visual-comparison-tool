@@ -5,31 +5,97 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import AutocompleteWithNegation, { AutocompleteOption } from '../components/AutocompleteWithNegation';
-import CardBox from '../features/comparison/CardBox';
-import cards, { Card, cardDataDates } from '../features/comparison/data/afrCards';
-// import getCardData from '../network/features/comparison/getCardData';
+import CardBox, { Card } from '../features/comparison/CardBox';
+import { getFiltersProxy } from '../network/features/comparison/getFiltersProxy';
+import { getCardDataProxy } from '../network/features/comparison/getCardDataProxy';
 
 const HomePage: React.FC = () => {
   const [selectableCards, setSelectableCards] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
-  const [selectedSortByOption, setSelectedSortByOption] = useState('win_rate');
+  const [selectedSortByOption, setSelectedSortByOption] = useState('ever_drawn_win_rate');
 
-  // TODO: Add support for live data if I can get access to an API from 17lands -- current API is restricted by CORS
-  // const [cards, setCards] = useState([]);
-  // useEffect(() => {
-  //   const fetchCards = async () => {
-  //     const cards = await getCardData({
-  //       expansion: 'AFR',
-  //       format: 'PremierDraft',
-  //       startDate: '2019-03-25',
-  //       endDate: new Date().toISOString().slice(0, 10),
-  //     });
-  //     setCards(cards);
-  //   };
-  //   fetchCards();
-  // }, []);
+  const [selectedExpansion, setSelectedExpansion] = useState('AFR');
+  const [selectedFormat, setSelectedFormat] = useState('PremierDraft');
+
+  const today = new Date();
+  const fourMonthsAgo = new Date();
+  fourMonthsAgo.setMonth(today.getMonth() - 4);
+  const defaultStartDate = fourMonthsAgo.toISOString().slice(0, 10);
+  const defaultEndDate = today.toISOString().slice(0, 10);
+
+  const [startDate, setStartDate] = useState(defaultStartDate);
+  const [endDate, setEndDate] = useState(defaultEndDate);
+
+  const [filters, setFilters] = useState({
+    colors: [],
+    expansions: [
+      'AFR',
+      'STX',
+      'KHM',
+      'ZNR',
+      'KLR',
+      'M21',
+      'AKR',
+      'IKO',
+      'THB',
+      'ELD',
+      'M20',
+      'WAR',
+      'RNA',
+      'GRN',
+      'M19',
+      'DOM',
+      'RIX',
+      'XLN',
+      'MH2',
+      'MH1',
+      '2XM',
+      'TSR',
+      'Ravnica',
+      'CORE',
+      'Cube',
+    ],
+    formats: [
+      'PremierDraft',
+      'TradDraft',
+      'QuickDraft',
+      'CompDraft',
+      'Sealed',
+      'TradSealed',
+      'CubeDraft',
+      'CubeSealed',
+      'DraftChallenge',
+      'OpenSealed_D1_Bo1',
+      'OpenSealed_D1_Bo3',
+      'OpenSealed_D2_Bo3',
+    ],
+  });
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      const fetchedFilters = await getFiltersProxy();
+      setFilters(fetchedFilters);
+      setSelectedExpansion(fetchedFilters?.expansions?.[0]);
+    };
+    fetchFilters();
+  }, []);
+
+  const [cards, setCards] = useState([]);
+  useEffect(() => {
+    const fetchCards = async () => {
+      const fetchedCards = await getCardDataProxy({
+        expansion: selectedExpansion,
+        format: selectedFormat,
+        startDate,
+        endDate,
+      });
+      setCards(fetchedCards);
+    };
+    fetchCards();
+  }, [selectedExpansion, selectedFormat, startDate, endDate]);
 
   useEffect(() => {
     setSelectableCards(mapCardsToAutocompleteOption(cards));
@@ -51,6 +117,15 @@ const HomePage: React.FC = () => {
     return 0;
   };
 
+  const mapCardsToAutocompleteOption = (cardsToMap: Array<Card>): Array<AutocompleteOption> =>
+    cardsToMap.map((card) => ({
+      category: selectedExpansion,
+      label: card.name,
+      value: card.name,
+      data: card,
+      exclude: false,
+    }));
+
   const updateSelectedCards = (newSelectedCards) => {
     const sortedCards = [...newSelectedCards.filter((card) => !card.exclude)].sort(sortByCardAttribute);
     setSelectedCards(sortedCards);
@@ -61,16 +136,40 @@ const HomePage: React.FC = () => {
     setSelectedSortByOption(newSortByOption);
   };
 
+  const handleSelectedExpansionChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const newSelectedExpansion = event.target.value as string;
+    setSelectedExpansion(newSelectedExpansion);
+    setSelectedCards([]);
+  };
+
+  const handleSelectedFormatChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const newSelectedFormat = event.target.value as string;
+    setSelectedFormat(newSelectedFormat);
+    setSelectedCards([]);
+  };
+
+  const handleStartDateChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const newStartDate = event.target.value as string;
+    setStartDate(newStartDate);
+    setSelectedCards([]);
+  };
+
+  const handleEndDateChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const newEndDate = event.target.value as string;
+    setEndDate(newEndDate);
+    setSelectedCards([]);
+  };
+
   return (
     <Container maxWidth="xl">
       <Typography variant="h3" component="h1" align="center">
-        17 Lands Visual Comparison
+        17Lands Visual Comparison
       </Typography>
       <Typography variant="subtitle1" align="center" color="textSecondary">
-        <em>Data last updated: {cardDataDates.endDate}</em>
+        <em>Because reading tables during a draft is hard! :) Data updates every 24 hours.</em>
       </Typography>
       <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
-        <Grid item xs={8} md={6}>
+        <Grid item xs={12} sm={8} md={6}>
           <AutocompleteWithNegation
             options={selectableCards}
             selectedOptions={selectedCards}
@@ -80,7 +179,33 @@ const HomePage: React.FC = () => {
             placeholder="Search for and add multiple cards to compare!"
           />
         </Grid>
-        <Grid item xs={4} md={12} style={{ textAlign: 'center' }}>
+      </Grid>
+      <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
+        <Grid item>
+          <FormControl>
+            <InputLabel>Expansion</InputLabel>
+            <Select value={selectedExpansion} onChange={handleSelectedExpansionChange}>
+              {filters?.expansions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item>
+          <FormControl>
+            <InputLabel>Format</InputLabel>
+            <Select value={selectedFormat} onChange={handleSelectedFormatChange}>
+              {filters?.formats.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item>
           <FormControl>
             <InputLabel>Sort By</InputLabel>
             <Select value={selectedSortByOption} onChange={handleSortByOptionChange}>
@@ -92,11 +217,35 @@ const HomePage: React.FC = () => {
             </Select>
           </FormControl>
         </Grid>
+        <Grid item>
+          <TextField
+            label="Start Date"
+            type="date"
+            value={startDate}
+            onChange={handleStartDateChange}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </Grid>
+        <Grid item>
+          <TextField
+            label="End Date"
+            type="date"
+            value={endDate}
+            onChange={handleEndDateChange}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </Grid>
+      </Grid>
+      <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
         <Grid container item xs={10} spacing={2} alignItems="center" justifyContent="center">
           {selectedCards.map((selectedCard) => {
             const sortByOption = sortByOptions.find((option) => option.name === selectedSortByOption);
             return (
-              <Grid item key={selectedCard.data.name} xs={2}>
+              <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={selectedCard.data.name}>
                 <CardBox
                   key={selectedCard.data.name}
                   card={selectedCard.data}
@@ -114,23 +263,10 @@ const HomePage: React.FC = () => {
 
 export default HomePage;
 
-const mapCardsToAutocompleteOption = (cards: Array<Card>): Array<AutocompleteOption> =>
-  cards.map((card) => ({
-    category: 'Adventures in the Forgotten Realms',
-    label: card.name,
-    value: card.name,
-    data: card,
-    exclude: false,
-  }));
-
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noOp = () => {};
 
 const sortByOptions = [
-  {
-    name: 'win_rate',
-    label: 'Win Rate In Main Deck',
-  },
   {
     name: 'ever_drawn_win_rate',
     label: 'Win Rate If Ever Drawn',
@@ -138,5 +274,9 @@ const sortByOptions = [
   {
     name: 'drawn_win_rate',
     label: 'Win Rate When Drawn',
+  },
+  {
+    name: 'win_rate',
+    label: 'Win Rate In Main Deck',
   },
 ];

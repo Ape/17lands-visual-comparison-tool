@@ -1,6 +1,6 @@
 {
   "name": "17lands-visual-comparison-tool",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 4000",
@@ -21,6 +21,7 @@
     "fontsource-roboto": "3.0.3",
     "formik": "2.1.5",
     "next": "9.5.2",
+    "node-cache": "5.1.2",
     "notistack": "1.0.1",
     "react": "16.13.1",
     "react-dom": "16.13.1",

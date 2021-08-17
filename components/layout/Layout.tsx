@@ -35,7 +35,7 @@ const ContentWrapper = styled.main(({ theme }) => ({
 const Layout: React.FC = ({ children }) => (
   <OuterWrapper>
     <Head>
-      <title>17 Lands Visual Comparison</title>
+      <title>17Lands Visual Comparison</title>
     </Head>
     <ContentWrapper>{children}</ContentWrapper>
     <Footer>

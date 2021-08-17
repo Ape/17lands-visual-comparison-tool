@@ -47,29 +47,29 @@ const AutocompleteWithNegation: React.FC<AutocompleteWithNegationProps> = ({
     value={selectedOptions}
     renderTags={(autocompleteOptions: AutocompleteOption[], getTagProps) =>
       autocompleteOptions.map((option: AutocompleteOption, index: number) => (
-        <Tooltip
-          key={option.value}
-          TransitionComponent={Zoom}
-          title={option.exclude ? '(Click to include this option)' : '(Click to exclude this option)'}
-        >
-          <Chip
-            label={option.label}
-            {...getTagProps({ index })}
-            color={option.exclude ? 'default' : 'primary'}
-            clickable
-            onClick={() => {
-              const clickedOption = { ...selectedOptions[index] };
-              clickedOption.exclude = !clickedOption.exclude;
+        // <Tooltip
+        //   key={option.value}
+        //   TransitionComponent={Zoom}
+        //   title={option.exclude ? '(Click to include this option)' : '(Click to exclude this option)'}
+        // >
+        <Chip
+          label={option.label}
+          {...getTagProps({ index })}
+          color={option.exclude ? 'default' : 'primary'}
+          clickable
+          onClick={() => {
+            const clickedOption = { ...selectedOptions[index] };
+            clickedOption.exclude = !clickedOption.exclude;
 
-              const updatedOptions = [...selectedOptions];
-              updatedOptions[index] = clickedOption;
+            const updatedOptions = [...selectedOptions];
+            updatedOptions[index] = clickedOption;
 
-              setSelectedOptionsLocally(updatedOptions);
-              setSelectedOptionsRemotely(updatedOptions);
-            }}
-            style={{ textDecoration: option.exclude ? 'line-through' : '' }}
-          />
-        </Tooltip>
+            setSelectedOptionsLocally(updatedOptions);
+            setSelectedOptionsRemotely(updatedOptions);
+          }}
+          style={{ textDecoration: option.exclude ? 'line-through' : '' }}
+        />
+        // </Tooltip>
       ))
     }
   />
