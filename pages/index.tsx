@@ -108,11 +108,12 @@ const HomePage: React.FC = () => {
 
   const sortByCardAttribute = (a, b) => {
     const attribute = selectedSortByOption;
+    const sortDirection = attribute === 'avg_seen' || attribute === 'avg_pick' ? -1 : 1;
     if (a.data[attribute] > b.data[attribute]) {
-      return -1;
+      return -sortDirection;
     }
     if (a.data[attribute] < b.data[attribute]) {
-      return 1;
+      return sortDirection;
     }
     return 0;
   };
@@ -269,14 +270,34 @@ const noOp = () => {};
 const sortByOptions = [
   {
     name: 'ever_drawn_win_rate',
-    label: 'Win Rate If Ever Drawn',
+    label: 'Win Rate In Hand (Opener or Drawn)',
+  },
+  {
+    name: 'opening_hand_win_rate',
+    label: 'Win Rate In Opening Hand',
   },
   {
     name: 'drawn_win_rate',
-    label: 'Win Rate When Drawn',
+    label: 'Win Rate When Drawn (Turn 1+)',
   },
   {
     name: 'win_rate',
     label: 'Win Rate In Main Deck',
+  },
+  {
+    name: 'never_drawn_win_rate',
+    label: 'Win Rate If Never Drawn',
+  },
+  {
+    name: 'drawn_improvement_win_rate',
+    label: 'Win Rate Improvement When Drawn',
+  },
+  {
+    name: 'avg_seen',
+    label: 'Average Pick Seen At',
+  },
+  {
+    name: 'avg_pick',
+    label: 'Average Pick Taken At',
   },
 ];
