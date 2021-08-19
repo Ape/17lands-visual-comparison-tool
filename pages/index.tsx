@@ -245,7 +245,7 @@ const HomePage: React.FC = () => {
           {selectedCards.map((selectedCard) => {
             const sortByOption = sortByOptions.find((option) => option.name === selectedSortByOption);
             return (
-              <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={selectedCard.data.name}>
+              <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={selectedCard.data.name}>
                 <CardBox
                   key={selectedCard.data.name}
                   card={selectedCard.data}
