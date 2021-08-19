@@ -1,12 +1,14 @@
 import styled from 'styled-components';
+import Skeleton from '@material-ui/lab/Skeleton';
 
 interface CardBoxProps {
   card: Card;
   attributeLabel: string;
   attributeValue: string;
+  loading: boolean;
 }
 
-const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue }) => {
+const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue, loading }) => {
   const shouldntUsePercentage = attributeLabel !== 'Average Pick Seen At' && attributeLabel !== 'Average Pick Taken At';
   const style = shouldntUsePercentage ? 'percent' : 'decimal';
 
@@ -25,7 +27,13 @@ const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue 
         <CardName>
           {attributeLabel}
           <br />
-          {attributeValueFormatted}
+          {loading ? (
+            <div style={{ textAlign: 'center' }}>
+              <Skeleton animation="wave" width="50px" style={{ display: 'inline-block' }} />
+            </div>
+          ) : (
+            attributeValueFormatted
+          )}
         </CardName>
       </CardAttributes>
     </CardWrapper>

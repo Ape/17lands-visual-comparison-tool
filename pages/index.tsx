@@ -117,9 +117,11 @@ const HomePage: React.FC = () => {
     fetchFilters();
   }, []);
 
+  const [loading, setLoading] = useState(false);
   const [cards, setCards] = useState([]);
   useEffect(() => {
     const fetchCards = async () => {
+      setLoading(true);
       const fetchedCards = await getCardDataProxy({
         expansion: selectedExpansion,
         format: selectedFormat,
@@ -128,6 +130,17 @@ const HomePage: React.FC = () => {
         endDate,
       });
       setCards(fetchedCards);
+      setSelectableCards(mapCardsToAutocompleteOption(fetchedCards));
+      const updatedSelectedCards = selectedCards.map((card) => {
+        const updatedCard = fetchedCards.find((fetchedCard) => fetchedCard.name === card.label);
+        if (updatedCard) {
+          card.data = updatedCard;
+        }
+        return card;
+      });
+      const sortedCards = [...updatedSelectedCards].sort(sortByCardAttribute);
+      setSelectedCards(sortedCards);
+      setLoading(false);
     };
     fetchCards();
   }, [selectedExpansion, selectedFormat, selectedDeckColors, startDate, endDate]);
@@ -181,25 +194,21 @@ const HomePage: React.FC = () => {
   const handleSelectedFormatChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newSelectedFormat = event.target.value as string;
     setSelectedFormat(newSelectedFormat);
-    setSelectedCards([]);
   };
 
   const handleStartDateChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newStartDate = event.target.value as string;
     setStartDate(newStartDate);
-    setSelectedCards([]);
   };
 
   const handleEndDateChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newEndDate = event.target.value as string;
     setEndDate(newEndDate);
-    setSelectedCards([]);
   };
 
   const handleSelectedDeckColorsChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newSelectedDeckColors = event.target.value as string;
     setSelectedDeckColors(newSelectedDeckColors);
-    setSelectedCards([]);
   };
 
   return (
@@ -218,7 +227,7 @@ const HomePage: React.FC = () => {
             setSelectedOptionsLocally={updateSelectedCards}
             setSelectedOptionsRemotely={noOp}
             label=""
-            placeholder="Search for and add multiple cards to compare!"
+            placeholder={loading ? 'Loading...' : 'Search for and add multiple cards to compare!'}
           />
         </Grid>
       </Grid>
@@ -309,13 +318,18 @@ const HomePage: React.FC = () => {
         <Grid container item xs={10} spacing={2} alignItems="center" justifyContent="center">
           {selectedCards.map((selectedCard) => {
             const sortByOption = sortByOptions.find((option) => option.name === selectedSortByOption);
+            const card = cards?.find((c) => c.name === selectedCard?.data.name);
+            if (!card) {
+              return null;
+            }
             return (
               <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={selectedCard.data.name}>
                 <CardBox
                   key={selectedCard.data.name}
-                  card={selectedCard.data}
+                  card={card}
                   attributeLabel={sortByOption.label}
-                  attributeValue={selectedCard.data[sortByOption.name]}
+                  attributeValue={card[sortByOption.name]}
+                  loading={loading}
                 />
               </Grid>
             );
