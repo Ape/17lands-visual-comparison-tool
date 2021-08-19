@@ -6,18 +6,28 @@ interface CardBoxProps {
   attributeValue: string;
 }
 
-const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue }) => (
-  <CardWrapper>
-    <CardAttributes>
-      <CardImage alt={card.name} title={card.name} src={card.url} />
-      <CardName>
-        {attributeLabel}
-        <br />
-        {attributeValue}
-      </CardName>
-    </CardAttributes>
-  </CardWrapper>
-);
+const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue }) => {
+  const attributeValuePercentage = !Number.isNaN(attributeValue)
+    ? Number(attributeValue).toLocaleString(undefined, {
+        style: 'percent',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    : 'N/A';
+
+  return (
+    <CardWrapper>
+      <CardAttributes>
+        <CardImage alt={card.name} title={card.name} src={card.url} />
+        <CardName>
+          {attributeLabel}
+          <br />
+          {attributeValuePercentage}
+        </CardName>
+      </CardAttributes>
+    </CardWrapper>
+  );
+};
 
 export interface Card {
   id: number;
