@@ -19,6 +19,7 @@ const HomePage: React.FC = () => {
 
   const [selectedExpansion, setSelectedExpansion] = useState('AFR');
   const [selectedFormat, setSelectedFormat] = useState('PremierDraft');
+  const [selectedDeckColors, setSelectedDeckColors] = useState('');
 
   const today = new Date();
   const fourMonthsAgo = new Date();
@@ -30,7 +31,40 @@ const HomePage: React.FC = () => {
   const [endDate, setEndDate] = useState(defaultEndDate);
 
   const [filters, setFilters] = useState({
-    colors: [],
+    colors: [
+      null,
+      'W',
+      'U',
+      'B',
+      'R',
+      'G',
+      'WU',
+      'WB',
+      'WR',
+      'WG',
+      'UB',
+      'UR',
+      'UG',
+      'BR',
+      'BG',
+      'RG',
+      'WUB',
+      'WUR',
+      'WUG',
+      'WBR',
+      'WBG',
+      'WRG',
+      'UBR',
+      'UBG',
+      'URG',
+      'BRG',
+      'WUBR',
+      'WUBG',
+      'WURG',
+      'WBRG',
+      'UBRG',
+      'WUBRG',
+    ],
     expansions: [
       'AFR',
       'STX',
@@ -89,13 +123,14 @@ const HomePage: React.FC = () => {
       const fetchedCards = await getCardDataProxy({
         expansion: selectedExpansion,
         format: selectedFormat,
+        colors: selectedDeckColors,
         startDate,
         endDate,
       });
       setCards(fetchedCards);
     };
     fetchCards();
-  }, [selectedExpansion, selectedFormat, startDate, endDate]);
+  }, [selectedExpansion, selectedFormat, selectedDeckColors, startDate, endDate]);
 
   useEffect(() => {
     setSelectableCards(mapCardsToAutocompleteOption(cards));
@@ -161,6 +196,12 @@ const HomePage: React.FC = () => {
     setSelectedCards([]);
   };
 
+  const handleSelectedDeckColorsChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const newSelectedDeckColors = event.target.value as string;
+    setSelectedDeckColors(newSelectedDeckColors);
+    setSelectedCards([]);
+  };
+
   return (
     <Container maxWidth="xl">
       <Typography variant="h3" component="h1" align="center">
@@ -203,6 +244,29 @@ const HomePage: React.FC = () => {
                   {option}
                 </MenuItem>
               ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item>
+          <FormControl>
+            <InputLabel shrink>Deck Colors</InputLabel>
+            <Select
+              value={selectedDeckColors}
+              onChange={handleSelectedDeckColorsChange}
+              style={{ minWidth: '100px' }}
+              placeholder="Colors"
+              displayEmpty
+            >
+              <MenuItem key="selectColor" value="">
+                Any Colors
+              </MenuItem>
+              {filters?.colors
+                .filter((option) => option !== null)
+                .map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </Grid>

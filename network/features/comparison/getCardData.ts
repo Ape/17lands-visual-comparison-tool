@@ -7,15 +7,17 @@ export interface GetCardDataFunction {
 interface CardDataParams {
   expansion: string;
   format: string;
+  colors?: string;
   startDate?: string;
   endDate?: string;
 }
 
-export const getCardData: GetCardDataFunction = async ({ expansion, format, startDate, endDate }) => {
+export const getCardData: GetCardDataFunction = async ({ expansion, format, colors, startDate, endDate }) => {
   try {
     const response = await getWithCache(`https://www.17lands.com/card_ratings/data`, {
       expansion,
       format,
+      colors,
       start_date: startDate,
       end_date: endDate,
     });
