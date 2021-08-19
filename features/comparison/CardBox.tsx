@@ -7,9 +7,12 @@ interface CardBoxProps {
 }
 
 const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue }) => {
-  const attributeValuePercentage = !Number.isNaN(attributeValue)
+  const shouldntUsePercentage = attributeLabel !== 'Average Pick Seen At' && attributeLabel !== 'Average Pick Taken At';
+  const style = shouldntUsePercentage ? 'percent' : 'decimal';
+
+  const attributeValueFormatted = !Number.isNaN(attributeValue)
     ? Number(attributeValue).toLocaleString(undefined, {
-        style: 'percent',
+        style,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })
@@ -22,7 +25,7 @@ const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue 
         <CardName>
           {attributeLabel}
           <br />
-          {attributeValuePercentage}
+          {attributeValueFormatted}
         </CardName>
       </CardAttributes>
     </CardWrapper>
