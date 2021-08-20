@@ -17,7 +17,7 @@ const HomePage: React.FC = () => {
   const [selectedCards, setSelectedCards] = useState([]);
   const [selectedSortByOption, setSelectedSortByOption] = useState('ever_drawn_win_rate');
 
-  const [selectedExpansion, setSelectedExpansion] = useState('AFR');
+  const [selectedExpansion, setSelectedExpansion] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('PremierDraft');
   const [selectedDeckColors, setSelectedDeckColors] = useState('');
 
@@ -121,6 +121,9 @@ const HomePage: React.FC = () => {
   const [cards, setCards] = useState([]);
   useEffect(() => {
     const fetchCards = async () => {
+      if (!selectedExpansion) {
+        return;
+      }
       setLoading(true);
       const fetchedCards = await getCardDataProxy({
         expansion: selectedExpansion,
@@ -234,8 +237,9 @@ const HomePage: React.FC = () => {
       <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
         <Grid item>
           <FormControl>
-            <InputLabel>Expansion</InputLabel>
+            <InputLabel shrink>Expansion</InputLabel>
             <Select value={selectedExpansion} onChange={handleSelectedExpansionChange}>
+              <MenuItem key="selectExpansion" value="" />
               {filters?.expansions.map((option) => (
                 <MenuItem key={option} value={option}>
                   {option}
