@@ -3,14 +3,22 @@ import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
+import Popover from '@material-ui/core/Popover';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
-import AutocompleteWithNegation, { AutocompleteOption } from '../components/AutocompleteWithNegation';
-import CardBox, { Card } from '../features/comparison/CardBox';
-import { getFiltersProxy } from '../network/features/comparison/getFiltersProxy';
+import IconButton from '@material-ui/core/IconButton';
+import FormLabel from '@material-ui/core/FormLabel';
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
+import SettingsIcon from '@material-ui/icons/Settings';
 import { getCardDataProxy } from '../network/features/comparison/getCardDataProxy';
+import { getFiltersProxy } from '../network/features/comparison/getFiltersProxy';
+import CardBox, { Card } from '../features/comparison/CardBox';
+import AutocompleteWithNegation, { AutocompleteOption } from '../components/AutocompleteWithNegation';
+import { sortByOptions } from '../features/comparison/sortByOptions';
 
 const HomePage: React.FC = () => {
   const [selectableCards, setSelectableCards] = useState([]);
@@ -29,6 +37,19 @@ const HomePage: React.FC = () => {
 
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
+
+  const [settingsMenuAnchorElement, setSettingsMenuAnchorElement] = useState<null | HTMLElement>(null);
+
+  const [additionalDataToShow, setAdditionalDataToShow] = useState({
+    ever_drawn_win_rate: false,
+    opening_hand_win_rate: false,
+    drawn_win_rate: false,
+    win_rate: false,
+    never_drawn_win_rate: false,
+    drawn_improvement_win_rate: false,
+    avg_seen: false,
+    avg_pick: false,
+  });
 
   const [filters, setFilters] = useState({
     colors: [
@@ -214,6 +235,18 @@ const HomePage: React.FC = () => {
     setSelectedDeckColors(newSelectedDeckColors);
   };
 
+  const handleSettingsButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setSettingsMenuAnchorElement(event.currentTarget);
+  };
+
+  const handleCloseSettingsMenu = () => {
+    setSettingsMenuAnchorElement(null);
+  };
+
+  const handleAdditionalDataToShowChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAdditionalDataToShow({ ...additionalDataToShow, [event.target.name]: event.target.checked });
+  };
+
   return (
     <Container maxWidth="xl">
       <Typography variant="h3" component="h1" align="center">
@@ -232,6 +265,47 @@ const HomePage: React.FC = () => {
             label=""
             placeholder={loading ? 'Loading...' : 'Search for and add multiple cards to compare!'}
           />
+        </Grid>
+        <Grid>
+          <IconButton size="small" aria-controls="settings-menu" aria-haspopup="true" onClick={handleSettingsButtonClick}>
+            <SettingsIcon color="disabled" />
+          </IconButton>
+          <Popover
+            id="settings-menu"
+            anchorEl={settingsMenuAnchorElement}
+            keepMounted
+            open={Boolean(settingsMenuAnchorElement)}
+            onClose={handleCloseSettingsMenu}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'center',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+          >
+            <div style={{ margin: '10px', padding: '10px' }}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend" disabled>
+                  Additionally show:
+                </FormLabel>
+                <FormGroup>
+                  {Object.keys(additionalDataToShow).map((data) => {
+                    const sortByOption = sortByOptions.find((option) => option.name === data);
+                    const label = `${sortByOption?.label} (${sortByOption.shortLabel})`;
+                    return (
+                      <FormControlLabel
+                        key={data}
+                        control={<Switch checked={additionalDataToShow[data]} onChange={handleAdditionalDataToShowChange} name={data} />}
+                        label={label}
+                      />
+                    );
+                  })}
+                </FormGroup>
+              </FormControl>
+            </div>
+          </Popover>
         </Grid>
       </Grid>
       <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
@@ -333,7 +407,9 @@ const HomePage: React.FC = () => {
                   card={card}
                   attributeLabel={sortByOption.label}
                   attributeValue={card[sortByOption.name]}
+                  attributeKey={sortByOption.name}
                   loading={loading}
+                  additionalDataToShow={additionalDataToShow}
                 />
               </Grid>
             );
@@ -348,38 +424,3 @@ export default HomePage;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noOp = () => {};
-
-const sortByOptions = [
-  {
-    name: 'ever_drawn_win_rate',
-    label: 'Win Rate In Hand (Opener or Drawn)',
-  },
-  {
-    name: 'opening_hand_win_rate',
-    label: 'Win Rate In Opening Hand',
-  },
-  {
-    name: 'drawn_win_rate',
-    label: 'Win Rate When Drawn (Turn 1+)',
-  },
-  {
-    name: 'win_rate',
-    label: 'Win Rate In Main Deck',
-  },
-  {
-    name: 'never_drawn_win_rate',
-    label: 'Win Rate If Never Drawn',
-  },
-  {
-    name: 'drawn_improvement_win_rate',
-    label: 'Win Rate Improvement When Drawn',
-  },
-  {
-    name: 'avg_seen',
-    label: 'Average Pick Seen At',
-  },
-  {
-    name: 'avg_pick',
-    label: 'Average Pick Taken At',
-  },
-];

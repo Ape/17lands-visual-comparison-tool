@@ -1,16 +1,18 @@
 import styled from 'styled-components';
 import Skeleton from '@material-ui/lab/Skeleton';
+import { sortByOptions } from './sortByOptions';
 
 interface CardBoxProps {
   card: Card;
   attributeLabel: string;
   attributeValue: string;
+  attributeKey: string;
   loading: boolean;
+  additionalDataToShow: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
-const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue, loading }) => {
-  const shouldntUsePercentage = attributeLabel !== 'Average Pick Seen At' && attributeLabel !== 'Average Pick Taken At';
-  const style = shouldntUsePercentage ? 'percent' : 'decimal';
+const formatAttribute = (attributeValue: string, usePercentage?: boolean) => {
+  const style = usePercentage ? 'percent' : 'decimal';
 
   const attributeValueFormatted = !Number.isNaN(attributeValue)
     ? Number(attributeValue).toLocaleString(undefined, {
@@ -19,6 +21,12 @@ const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue,
         maximumFractionDigits: 2,
       })
     : 'N/A';
+  return attributeValueFormatted;
+};
+
+const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue, attributeKey, loading, additionalDataToShow }) => {
+  const shouldUsePercentage = attributeLabel !== 'Average Last Seen At' && attributeLabel !== 'Average Pick Taken At';
+  const attributeValueFormatted = formatAttribute(attributeValue, shouldUsePercentage);
 
   return (
     <CardWrapper>
@@ -32,7 +40,26 @@ const CardBox: React.FC<CardBoxProps> = ({ card, attributeLabel, attributeValue,
               <Skeleton animation="wave" width="50px" style={{ display: 'inline-block' }} />
             </div>
           ) : (
-            attributeValueFormatted
+            <>
+              <>{attributeValueFormatted}</>
+              <>
+                {Object.keys(additionalDataToShow).map((key) => {
+                  if (key === attributeKey) {
+                    return null;
+                  }
+                  if (additionalDataToShow[key]) {
+                    const cardMetaData = sortByOptions.find((option) => option.name === key);
+                    const dataFormatted = formatAttribute(card[key], cardMetaData.usePercentage);
+                    return (
+                      <span style={{ opacity: '40%', whiteSpace: 'normal' }}>
+                        {' '}
+                        / {dataFormatted} ({cardMetaData?.shortLabel})
+                      </span>
+                    );
+                  }
+                })}
+              </>
+            </>
           )}
         </CardName>
       </CardAttributes>
@@ -57,6 +84,7 @@ const CardWrapper = styled.div({
   height: 'auto',
   minHeight: '50px',
   lineHeight: 1.43,
+  overflow: 'auto',
 });
 
 const CardAttributes = styled.div({ textAlign: 'center', maxWidth: '100%' });
