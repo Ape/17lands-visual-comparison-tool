@@ -14,6 +14,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import SettingsIcon from '@material-ui/icons/Settings';
+import Divider from '@material-ui/core/Divider';
 import { getCardDataProxy } from '../network/features/comparison/getCardDataProxy';
 import { getFiltersProxy } from '../network/features/comparison/getFiltersProxy';
 import CardBox, { Card } from '../features/comparison/CardBox';
@@ -39,6 +40,9 @@ const HomePage: React.FC = () => {
   const [endDate, setEndDate] = useState(defaultEndDate);
 
   const [settingsMenuAnchorElement, setSettingsMenuAnchorElement] = useState<null | HTMLElement>(null);
+  const [viewAllCards, setViewAllCards] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [displayedCards, setDisplayedCards] = useState<AutocompleteOption[]>([]);
 
   const [additionalDataToShow, setAdditionalDataToShow] = useState({
     ever_drawn_win_rate: false,
@@ -178,6 +182,15 @@ const HomePage: React.FC = () => {
     setSelectedCards(sortedCards);
   }, [selectedSortByOption]);
 
+  useEffect(() => {
+    if (viewAllCards) {
+      const sortedCards = [...selectableCards].sort(sortByCardAttribute);
+      setDisplayedCards(sortedCards);
+    } else {
+      setDisplayedCards(selectedCards);
+    }
+  }, [cards, viewAllCards, selectedCards, selectableCards, selectedSortByOption]);
+
   const sortByCardAttribute = (a, b) => {
     const attribute = selectedSortByOption;
     const sortDirection = attribute === 'avg_seen' || attribute === 'avg_pick' ? -1 : 1;
@@ -200,8 +213,15 @@ const HomePage: React.FC = () => {
     }));
 
   const updateSelectedCards = (newSelectedCards) => {
-    const sortedCards = [...newSelectedCards.filter((card) => !card.exclude)].sort(sortByCardAttribute);
-    setSelectedCards(sortedCards);
+    if (viewAllCards) {
+      const filteredCards = selectableCards.filter((card) => card.label.toLowerCase().includes(searchText.toLowerCase()));
+      const sortedCards = [...filteredCards].sort(sortByCardAttribute);
+      setDisplayedCards(sortedCards);
+    } else {
+      const sortedCards = [...newSelectedCards.filter((card) => !card.exclude)].sort(sortByCardAttribute);
+      setSelectedCards(sortedCards);
+      setDisplayedCards(sortedCards);
+    }
   };
 
   const handleSortByOptionChange = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -247,6 +267,31 @@ const HomePage: React.FC = () => {
     setAdditionalDataToShow({ ...additionalDataToShow, [event.target.name]: event.target.checked });
   };
 
+  const handleViewAllCardsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newViewAllCards = event.target.checked;
+    setViewAllCards(newViewAllCards);
+
+    if (newViewAllCards) {
+      const filteredCards = selectableCards.filter(
+        (card) => searchText === '' || card.label.toLowerCase().includes(searchText.toLowerCase())
+      );
+      const sortedCards = [...filteredCards].sort(sortByCardAttribute);
+      setDisplayedCards(sortedCards);
+    } else {
+      setDisplayedCards(selectedCards);
+    }
+  };
+
+  const handleSearchTextChange = (newSearchText: string) => {
+    setSearchText(newSearchText);
+
+    if (viewAllCards) {
+      const filteredCards = selectableCards.filter((card) => card.label.toLowerCase().includes(newSearchText.toLowerCase()));
+      const sortedCards = [...filteredCards].sort(sortByCardAttribute);
+      setDisplayedCards(sortedCards);
+    }
+  };
+
   return (
     <Container maxWidth="xl">
       <Typography variant="h3" component="h1" align="center">
@@ -257,14 +302,24 @@ const HomePage: React.FC = () => {
       </Typography>
       <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
         <Grid item xs={12} sm={8} md={6}>
-          <AutocompleteWithNegation
-            options={selectableCards}
-            selectedOptions={selectedCards}
-            setSelectedOptionsLocally={updateSelectedCards}
-            setSelectedOptionsRemotely={noOp}
-            label=""
-            placeholder={loading ? 'Loading...' : 'Search for and add multiple cards to compare!'}
-          />
+          {viewAllCards ? (
+            <TextField
+              fullWidth
+              label="Filter cards"
+              value={searchText}
+              onChange={(e) => handleSearchTextChange(e.target.value)}
+              placeholder={loading ? 'Loading...' : 'Type to filter cards'}
+            />
+          ) : (
+            <AutocompleteWithNegation
+              options={selectableCards}
+              selectedOptions={selectedCards}
+              setSelectedOptionsLocally={updateSelectedCards}
+              setSelectedOptionsRemotely={noOp}
+              label=""
+              placeholder={loading ? 'Loading...' : 'Search for and add multiple cards to compare!'}
+            />
+          )}
         </Grid>
         <Grid>
           <IconButton size="small" aria-controls="settings-menu" aria-haspopup="true" onClick={handleSettingsButtonClick}>
@@ -287,6 +342,14 @@ const HomePage: React.FC = () => {
           >
             <div style={{ margin: '10px', padding: '10px' }}>
               <FormControl component="fieldset">
+                <FormLabel component="legend" disabled>
+                  View options:
+                </FormLabel>
+                <FormControlLabel
+                  control={<Switch checked={viewAllCards} onChange={handleViewAllCardsChange} name="viewAllCards" />}
+                  label="View all cards in set"
+                />
+                <Divider style={{ margin: '10px 0' }} />
                 <FormLabel component="legend" disabled>
                   Additionally show:
                 </FormLabel>
@@ -394,16 +457,16 @@ const HomePage: React.FC = () => {
       </Grid>
       <Grid container spacing={3} alignItems="center" justifyContent="center" style={{ marginTop: '10px' }}>
         <Grid container item xs={10} spacing={2} alignItems="center" justifyContent="center">
-          {selectedCards.map((selectedCard) => {
+          {displayedCards.map((displayedCard) => {
             const sortByOption = sortByOptions.find((option) => option.name === selectedSortByOption);
-            const card = cards?.find((c) => c.name === selectedCard?.data.name);
+            const card = cards?.find((c) => c.name === displayedCard?.data?.name);
             if (!card) {
               return null;
             }
             return (
-              <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={selectedCard.data.name}>
+              <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={displayedCard.data.name}>
                 <CardBox
-                  key={selectedCard.data.name}
+                  key={displayedCard.data.name}
                   card={card}
                   attributeLabel={sortByOption.label}
                   attributeValue={card[sortByOption.name]}
