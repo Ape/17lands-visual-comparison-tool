@@ -43,6 +43,12 @@ const HomePage: React.FC = () => {
   const [viewAllCards, setViewAllCards] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [displayedCards, setDisplayedCards] = useState<AutocompleteOption[]>([]);
+  const [selectedRarities, setSelectedRarities] = useState({
+    mythic: true,
+    rare: true,
+    uncommon: true,
+    common: true,
+  });
 
   const [additionalDataToShow, setAdditionalDataToShow] = useState({
     ever_drawn_win_rate: false,
@@ -184,12 +190,18 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     if (viewAllCards) {
-      const sortedCards = [...selectableCards].sort(sortByCardAttribute);
+      const filteredByRarity = selectableCards.filter(card => {
+        if (!card.data.rarity) return true;
+        
+        return selectedRarities[card.data.rarity.toLowerCase()];
+      });
+      
+      const sortedCards = [...filteredByRarity].sort(sortByCardAttribute);
       setDisplayedCards(sortedCards);
     } else {
       setDisplayedCards(selectedCards);
     }
-  }, [cards, viewAllCards, selectedCards, selectableCards, selectedSortByOption]);
+  }, [cards, viewAllCards, selectedCards, selectableCards, selectedSortByOption, selectedRarities]);
 
   const sortByCardAttribute = (a, b) => {
     const attribute = selectedSortByOption;
@@ -267,14 +279,23 @@ const HomePage: React.FC = () => {
     setAdditionalDataToShow({ ...additionalDataToShow, [event.target.name]: event.target.checked });
   };
 
+  const handleRarityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedRarities({ ...selectedRarities, [event.target.name]: event.target.checked });
+  };
+
   const handleViewAllCardsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newViewAllCards = event.target.checked;
     setViewAllCards(newViewAllCards);
 
     if (newViewAllCards) {
-      const filteredCards = selectableCards.filter(
-        (card) => searchText === '' || card.label.toLowerCase().includes(searchText.toLowerCase())
-      );
+      const filteredCards = selectableCards.filter(card => {
+        const matchesText = searchText === '' || card.label.toLowerCase().includes(searchText.toLowerCase());
+        
+        const matchesRarity = !card.data.rarity || selectedRarities[card.data.rarity.toLowerCase()];
+        
+        return matchesText && matchesRarity;
+      });
+      
       const sortedCards = [...filteredCards].sort(sortByCardAttribute);
       setDisplayedCards(sortedCards);
     } else {
@@ -286,7 +307,14 @@ const HomePage: React.FC = () => {
     setSearchText(newSearchText);
 
     if (viewAllCards) {
-      const filteredCards = selectableCards.filter((card) => card.label.toLowerCase().includes(newSearchText.toLowerCase()));
+      const filteredCards = selectableCards.filter((card) => {
+        const matchesText = card.label.toLowerCase().includes(newSearchText.toLowerCase());
+        
+        const matchesRarity = !card.data.rarity || selectedRarities[card.data.rarity.toLowerCase()];
+        
+        return matchesText && matchesRarity;
+      });
+      
       const sortedCards = [...filteredCards].sort(sortByCardAttribute);
       setDisplayedCards(sortedCards);
     }
@@ -349,6 +377,32 @@ const HomePage: React.FC = () => {
                   control={<Switch checked={viewAllCards} onChange={handleViewAllCardsChange} name="viewAllCards" />}
                   label="View all cards in set"
                 />
+                {viewAllCards && (
+                  <>
+                    <Divider style={{ margin: '10px 0' }} />
+                    <FormLabel component="legend" disabled>
+                      Rarity filters:
+                    </FormLabel>
+                    <FormGroup row>
+                      <FormControlLabel
+                        control={<Switch checked={selectedRarities.mythic} onChange={handleRarityChange} name="mythic" />}
+                        label="Mythic"
+                      />
+                      <FormControlLabel
+                        control={<Switch checked={selectedRarities.rare} onChange={handleRarityChange} name="rare" />}
+                        label="Rare"
+                      />
+                      <FormControlLabel
+                        control={<Switch checked={selectedRarities.uncommon} onChange={handleRarityChange} name="uncommon" />}
+                        label="Uncommon"
+                      />
+                      <FormControlLabel
+                        control={<Switch checked={selectedRarities.common} onChange={handleRarityChange} name="common" />}
+                        label="Common"
+                      />
+                    </FormGroup>
+                  </>
+                )}
                 <Divider style={{ margin: '10px 0' }} />
                 <FormLabel component="legend" disabled>
                   Additionally show:
