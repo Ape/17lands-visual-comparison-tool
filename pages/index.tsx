@@ -15,6 +15,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import SettingsIcon from '@material-ui/icons/Settings';
 import Divider from '@material-ui/core/Divider';
+import ToggleButton from '@material-ui/lab/ToggleButton';
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import { getCardDataProxy } from '../network/features/comparison/getCardDataProxy';
 import { getFiltersProxy } from '../network/features/comparison/getFiltersProxy';
 import CardBox, { Card } from '../features/comparison/CardBox';
@@ -48,6 +50,15 @@ const HomePage: React.FC = () => {
     rare: true,
     uncommon: true,
     common: true,
+  });
+  
+  const [selectedColors, setSelectedColors] = useState({
+    W: true,
+    U: true,
+    B: true,
+    R: true,
+    G: true,
+    C: true,
   });
 
   const [additionalDataToShow, setAdditionalDataToShow] = useState({
@@ -190,18 +201,34 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     if (viewAllCards) {
-      const filteredByRarity = selectableCards.filter(card => {
-        if (!card.data.rarity) return true;
+      const filteredCards = selectableCards.filter(card => {
+        const rarityMatch = !card.data.rarity || selectedRarities[card.data.rarity.toLowerCase()];
         
-        return selectedRarities[card.data.rarity.toLowerCase()];
+        let colorMatch = true;
+        if (!card.data.color || card.data.color === "") {
+          colorMatch = selectedColors.C;
+        } else {
+          const cardColors = card.data.color.split('');
+          const selectedColorsList = Object.entries(selectedColors)
+            .filter(([color, isSelected]) => color !== 'C' && isSelected)
+            .map(([color]) => color);
+            
+          if (selectedColorsList.length === 0 && !selectedColors.C) {
+            colorMatch = false;
+          } else {
+            colorMatch = cardColors.some(color => selectedColors[color]);
+          }
+        }
+        
+        return rarityMatch && colorMatch;
       });
       
-      const sortedCards = [...filteredByRarity].sort(sortByCardAttribute);
+      const sortedCards = [...filteredCards].sort(sortByCardAttribute);
       setDisplayedCards(sortedCards);
     } else {
       setDisplayedCards(selectedCards);
     }
-  }, [cards, viewAllCards, selectedCards, selectableCards, selectedSortByOption, selectedRarities]);
+  }, [cards, viewAllCards, selectedCards, selectableCards, selectedSortByOption, selectedRarities, selectedColors]);
 
   const sortByCardAttribute = (a, b) => {
     const attribute = selectedSortByOption;
@@ -282,6 +309,21 @@ const HomePage: React.FC = () => {
   const handleRarityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedRarities({ ...selectedRarities, [event.target.name]: event.target.checked });
   };
+  
+  const handleColorChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newSelectedColors: string[]
+  ) => {
+    const updatedColors = {
+      W: newSelectedColors.includes('W'),
+      U: newSelectedColors.includes('U'),
+      B: newSelectedColors.includes('B'),
+      R: newSelectedColors.includes('R'),
+      G: newSelectedColors.includes('G'),
+      C: newSelectedColors.includes('C'),
+    };
+    setSelectedColors(updatedColors);
+  };
 
   const handleViewAllCardsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newViewAllCards = event.target.checked;
@@ -293,7 +335,23 @@ const HomePage: React.FC = () => {
         
         const matchesRarity = !card.data.rarity || selectedRarities[card.data.rarity.toLowerCase()];
         
-        return matchesText && matchesRarity;
+        let matchesColor = true;
+        if (!card.data.color || card.data.color === "") {
+          matchesColor = selectedColors.C;
+        } else {
+          const cardColors = card.data.color.split('');
+          const selectedColorsList = Object.entries(selectedColors)
+            .filter(([color, isSelected]) => color !== 'C' && isSelected)
+            .map(([color]) => color);
+            
+          if (selectedColorsList.length === 0 && !selectedColors.C) {
+            matchesColor = false;
+          } else {
+            matchesColor = cardColors.some(color => selectedColors[color]);
+          }
+        }
+        
+        return matchesText && matchesRarity && matchesColor;
       });
       
       const sortedCards = [...filteredCards].sort(sortByCardAttribute);
@@ -312,7 +370,23 @@ const HomePage: React.FC = () => {
         
         const matchesRarity = !card.data.rarity || selectedRarities[card.data.rarity.toLowerCase()];
         
-        return matchesText && matchesRarity;
+        let matchesColor = true;
+        if (!card.data.color || card.data.color === "") {
+          matchesColor = selectedColors.C;
+        } else {
+          const cardColors = card.data.color.split('');
+          const selectedColorsList = Object.entries(selectedColors)
+            .filter(([color, isSelected]) => color !== 'C' && isSelected)
+            .map(([color]) => color);
+            
+          if (selectedColorsList.length === 0 && !selectedColors.C) {
+            matchesColor = false;
+          } else {
+            matchesColor = cardColors.some(color => selectedColors[color]);
+          }
+        }
+        
+        return matchesText && matchesRarity && matchesColor;
       });
       
       const sortedCards = [...filteredCards].sort(sortByCardAttribute);
@@ -383,7 +457,7 @@ const HomePage: React.FC = () => {
                     <FormLabel component="legend" disabled>
                       Rarity filters:
                     </FormLabel>
-                    <FormGroup row>
+                    <FormGroup row style={{ display: 'flex', justifyContent: 'flex-start' }}>
                       <FormControlLabel
                         control={<Switch checked={selectedRarities.mythic} onChange={handleRarityChange} name="mythic" />}
                         label="Mythic"
@@ -401,6 +475,40 @@ const HomePage: React.FC = () => {
                         label="Common"
                       />
                     </FormGroup>
+                    <Divider style={{ margin: '10px 0' }} />
+                    <FormLabel component="legend" disabled>
+                      Color filters:
+                    </FormLabel>
+                    <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '10px' }}>
+                      <ToggleButtonGroup
+                        value={Object.keys(selectedColors).filter(color => selectedColors[color])}
+                        onChange={handleColorChange}
+                        aria-label="color filters"
+                        size="small"
+                      >
+                        {Object.keys(selectedColors).map((color) => (
+                          <ToggleButton 
+                            key={color} 
+                            value={color}
+                            aria-label={color}
+                            style={{ 
+                              padding: '6px',
+                              minWidth: '42px'
+                            }}
+                          >
+                            <img
+                              src={`https://svgs.scryfall.io/card-symbols/${color}.svg`}
+                              alt={color}
+                              style={{ 
+                                height: '24px', 
+                                width: '24px',
+                                opacity: selectedColors[color] ? 1 : 0.4
+                              }}
+                            />
+                          </ToggleButton>
+                        ))}
+                      </ToggleButtonGroup>
+                    </div>
                   </>
                 )}
                 <Divider style={{ margin: '10px 0' }} />
