@@ -414,7 +414,14 @@ const HomePage: React.FC = () => {
                 .filter((option) => option !== null)
                 .map((option) => (
                   <MenuItem key={option} value={option}>
-                    {option}
+                    {option.split('').map((symbol, idx) => (
+                      <img
+                        key={idx}
+                        src={`https://svgs.scryfall.io/card-symbols/${symbol}.svg`}
+                        alt={symbol}
+                        style={{ height: '20px', marginRight: '2px' }}
+                      />
+                    ))}
                   </MenuItem>
                 ))}
             </Select>
